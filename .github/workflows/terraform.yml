@@ -1,0 +1,141 @@
+name: Construir Infraestrutura AWS
+on:
+    workflow_dispatch:
+jobs:
+    Lambda_and_EKS:
+      runs-on: ubuntu-latest
+      steps:
+          - name: Baixando arquivos do repo
+            uses: actions/checkout@v4
+          - name: Aws Credentials
+            uses: aws-actions/configure-aws-credentials@v4
+            with:
+              aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+              aws-region: ${{ vars.AWS_REGION }}  
+          - name: Configurando Terraform
+            uses: hashicorp/setup-terraform@v3
+          - name: Terraform Init
+            run: terraform init -input=false
+          - name: Terraform Format
+            run: terraform fmt -check
+          - name: Terraform Validate
+            run: terraform validate
+          - name: Terraform Apply Lambda              
+            run: terraform apply -target=module.lambda -var="id=${{ vars.AWS_ACCOUNT_ID}}" -auto-approve
+          - name: Terraform Apply Login              
+            run: terraform apply -target=module.login -var="id=${{ vars.AWS_ACCOUNT_ID}}" -auto-approve
+          - name: Terraform Apply Auth              
+            run: terraform apply -target=module.auth -var="id=${{ vars.AWS_ACCOUNT_ID}}" -auto-approve
+          - name: Terraform Apply EKS              
+            run: terraform apply -target=module.eks -var="id=${{ vars.AWS_ACCOUNT_ID}}" -auto-approve
+    K8S_Deploy:
+      needs: Lambda_and_EKS
+      outputs:
+        lb_pagamento: ${{ steps.get_lb_pagamento.outputs.lb_pagamento }}
+        lb_pedido: ${{ steps.get_lb_pedido.outputs.lb_pedido }}
+        lb_preparo: ${{ steps.get_lb_preparo.outputs.lb_preparo }}
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout Repo
+          uses: actions/checkout@v4       
+        - name: Tokenizar artefatos
+          uses: cschleiden/replace-tokens@v1
+          with:
+            tokenPrefix: '__'
+            tokenSuffix: '__'
+            files: './k8s/manifests/*.yml'    
+          env:
+            AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+        - name: Configure AWS Credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+            aws-region: ${{ vars.AWS_REGION }}  
+        - name: Carregar Kube Config
+          run: |
+            aws eks update-kubeconfig \
+            --name ${{ vars.CLUSTER_NAME }} \
+            --region ${{ vars.AWS_REGION }}      
+        - name: Aplicar Configurações no EKS
+          run: kubectl apply -f ./k8s/manifests
+        - name: Aguardar Deployments
+          run: |
+            kubectl rollout status deployment/fiap-deployment-preparo -n fiap-soat11 --timeout=180s
+            kubectl rollout status deployment/fiap-deployment-pagamento -n fiap-soat11 --timeout=180s
+            kubectl rollout status deployment/fiap-deployment-pedido -n fiap-soat11 --timeout=180s
+        - name: Get Service LB Pedido
+          id: get_lb_pedido
+          run: |
+              for i in {1..10}; do
+                LB=$(kubectl get svc fiap-svc-pedido -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
+                  echo "LoadBalancer hostname found: $LB"
+                  echo "::set-output name=lb_pedido::$LB"
+                  exit 0
+                else
+                  echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
+                  sleep 30
+                fi
+              done
+              echo "Failed to get LoadBalancer hostname after 10 attempts."
+              exit 1
+        - name: Get Service LB Pagamento
+          id: get_lb_pagamento
+          run: |
+              for i in {1..10}; do
+                LB=$(kubectl get svc fiap-svc-pagamento -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
+                  echo "LoadBalancer hostname found: $LB"
+                  echo "::set-output name=lb_pagamento::$LB"
+                  exit 0
+                else
+                  echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
+                  sleep 30
+                fi
+              done
+              echo "Failed to get LoadBalancer hostname after 10 attempts."
+              exit 1
+        - name: Get Service LB Preparo
+          id: get_lb_preparo
+          run: |
+              for i in {1..10}; do
+                LB=$(kubectl get svc fiap-svc-preparo -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
+                  echo "LoadBalancer hostname found: $LB"
+                  echo "::set-output name=lb_preparo::$LB"
+                  exit 0
+                else
+                  echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
+                  sleep 30
+                fi
+              done
+              echo "Failed to get LoadBalancer hostname after 10 attempts."
+              exit 1
+    Api_Gateway:
+      needs: [Lambda_and_EKS, K8S_Deploy]
+      #needs: K8S_Deploy
+      runs-on: ubuntu-latest
+      steps:
+          - name: Baixando arquivos do repo
+            uses: actions/checkout@v4
+          - name: Configurando Terraform
+            uses: hashicorp/setup-terraform@v3
+          - name: Aws Credentials
+            uses: aws-actions/configure-aws-credentials@v4
+            with:
+              aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+              aws-region: ${{ vars.AWS_REGION }}  
+          - name: Terraform Init
+            run: terraform init
+          - name: Terraform Format
+            run: terraform fmt -check
+          - name: Terraform Validate
+            run: terraform validate
+          - name: Terraform Apply
+            run: terraform apply -target=module.api_gateway -var="dns_eks_pedido=${{ needs.K8S_Deploy.outputs.lb_pedido }}" -var="dns_eks_pagamento=${{ needs.K8S_Deploy.outputs.lb_pagamento }}" -var="dns_eks_preparo=${{ needs.K8S_Deploy.outputs.lb_preparo }}" -auto-approve

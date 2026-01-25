@@ -1,0 +1,41 @@
+name: Destruir Infraestrutura AWS
+on:
+    workflow_dispatch:
+jobs:
+    terraform:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Baixando arquivos do repo
+            uses: actions/checkout@v4
+          - name: Aws Credentials
+            uses: aws-actions/configure-aws-credentials@v4
+            with:
+              aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+              aws-region: ${{ vars.AWS_REGION }}  
+          - name: Credentials
+            run: aws sts get-caller-identity
+          - name: Configurando Terraform
+            uses: hashicorp/setup-terraform@v3
+          #- name: Ativar Debug Terraform
+          #  run: echo "TF_LOG=DEBUG" >> $GITHUB_ENV
+          - name: Carregar Kube Config
+            run: |
+              aws eks update-kubeconfig \
+              --name ${{ vars.CLUSTER_NAME }} \
+              --region ${{ vars.AWS_REGION }}                
+          - name: Get Service LB
+            id: get_lb
+            run: |
+              LB=$(kubectl get svc fiap-svc -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+              echo "::set-output name=lb::$LB"
+            continue-on-error: true
+          - name: Terraform Init
+            run: terraform init -input=false
+          - name: Terraform Format
+            run: terraform fmt -check
+          - name: Terraform Validate
+            run: terraform validate
+          - name: Terraform Destroy
+            run: terraform destroy -var="dns_eks_pedido=${{ steps.get_lb.outputs.lb_pedido }}" -var="dns_eks_pagamento=${{ steps.get_lb.outputs.lb_pagamento }}" -var="dns_eks_preparo=${{ steps.get_lb.outputs.lb_preparo }}" -auto-approve

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiap-deployment-pedido
+  namespace: fiap-soat11
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fiap-deployment-pedido
+  template:
+    metadata:
+      labels:
+        app: fiap-deployment-pedido
+    spec:
+      containers:
+        - name: fiap-deployment-pedido
+          image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiap-pedido
+          #image: adinaildoribeiro/fiap-pedido:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          env:
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: fiap-db-secret-pedido
+                  key: ConnectionStrings__DefaultConnection
+            - name: RabbitMQ__Host
+              value: "rabbitmq.fiap-soat11.svc.cluster.local"
+            - name: RabbitMQ__Port
+              value: "5672"
+            - name: RabbitMQ__Username
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: rabbitmq-username
+            - name: RabbitMQ__Password
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: rabbitmq-password
+          livenessProbe:
+            httpGet:
+              path: /api/Health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/Health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
