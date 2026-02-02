@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fiap-svc-pagamento
+  name: fiap-svc-processamento
   namespace: fiap-soat11
 spec:
   selector:
-    app: fiap-deployment-pagamento
+    app: fiap-deployment-processamento
   ports:
     - protocol: TCP
-      port: 8082
+      port: 8083
       targetPort: 8080
   type: LoadBalancer

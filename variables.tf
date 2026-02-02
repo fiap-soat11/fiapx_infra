@@ -6,7 +6,7 @@ variable "regionDefault" {
   default = "us-east-1"
 }
 variable "projectName" {
-  default = "EKS-FIAP"
+  default = "fiapx"
 }
 
 variable "accessConfig" {
@@ -29,15 +29,11 @@ variable "policyArn" {
 //  default = "902877452717.dkr.ecr.us-east-1.amazonaws.com/fiap-lambda@sha256:ff5673c87b712777e5c1b68d1ccc59e81ec2b074efae954305c3a28130d37313"
 //}
 
-variable "dns_eks_pedido" {
+variable "dns_eks_usuario" {
   type    = string
   default = "value"
 }
-variable "dns_eks_pagamento" {
-  type    = string
-  default = "value"
-}
-variable "dns_eks_preparo" {
+variable "dns_eks_video" {
   type    = string
   default = "value"
 }

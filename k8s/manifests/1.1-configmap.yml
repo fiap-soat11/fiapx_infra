@@ -7,4 +7,3 @@ data:
   ASPNETCORE_ENVIRONMENT: "Production"
   Logging__LogLevel__Default: "Information"
   Logging__LogLevel__Microsoft: "Warning"
-  MercadoPago__NotificationUrl: "https://fiap-soat11.api.com:80/?source_news=webhooks"

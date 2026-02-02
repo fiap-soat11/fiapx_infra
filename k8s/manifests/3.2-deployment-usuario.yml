@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fiap-deployment-pedido
+  name: fiap-deployment-usuario
   namespace: fiap-soat11
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: fiap-deployment-pedido
+      app: fiap-deployment-usuario
   template:
     metadata:
       labels:
-        app: fiap-deployment-pedido
+        app: fiap-deployment-usuario
     spec:
       containers:
-        - name: fiap-deployment-pedido
-          image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiap-pedido
-          #image: adinaildoribeiro/fiap-pedido:latest
+        - name: fiap-deployment-usuario
+          #image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiap-usuario
+          image: adinaildoribeiro/fiap-pedido:v4
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -31,22 +31,8 @@ spec:
             - name: ConnectionStrings__DefaultConnection
               valueFrom:
                 secretKeyRef:
-                  name: fiap-db-secret-pedido
+                  name: fiap-db-secret
                   key: ConnectionStrings__DefaultConnection
-            - name: RabbitMQ__Host
-              value: "rabbitmq.fiap-soat11.svc.cluster.local"
-            - name: RabbitMQ__Port
-              value: "5672"
-            - name: RabbitMQ__Username
-              valueFrom:
-                secretKeyRef:
-                  name: rabbitmq-secret
-                  key: rabbitmq-username
-            - name: RabbitMQ__Password
-              valueFrom:
-                secretKeyRef:
-                  name: rabbitmq-secret
-                  key: rabbitmq-password
           livenessProbe:
             httpGet:
               path: /api/Health

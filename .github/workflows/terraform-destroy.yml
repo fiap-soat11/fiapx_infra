@@ -25,11 +25,39 @@ jobs:
               aws eks update-kubeconfig \
               --name ${{ vars.CLUSTER_NAME }} \
               --region ${{ vars.AWS_REGION }}                
-          - name: Get Service LB
-            id: get_lb
+          - name: Get Service LB usuario
+            id: get_lb_usuario
             run: |
-              LB=$(kubectl get svc fiap-svc -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-              echo "::set-output name=lb::$LB"
+              for i in {1..10}; do
+                LB=$(kubectl get svc fiap-svc-usuario -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
+                  echo "LoadBalancer hostname found: $LB"
+                  echo "::set-output name=lb_usuario::$LB"
+                  exit 0
+                else
+                  echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
+                  sleep 30
+                fi
+              done
+              echo "Failed to get LoadBalancer hostname after 10 attempts."
+              exit 1
+            continue-on-error: true
+          - name: Get Service LB video
+            id: get_lb_video
+            run: |
+                for i in {1..10}; do
+                  LB=$(kubectl get svc fiap-svc-video -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                  if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
+                    echo "LoadBalancer hostname found: $LB"
+                    echo "::set-output name=lb_video::$LB"
+                    exit 0
+                  else
+                    echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
+                    sleep 30
+                  fi
+                done
+                echo "Failed to get LoadBalancer hostname after 10 attempts."
+                exit 1
             continue-on-error: true
           - name: Terraform Init
             run: terraform init -input=false
@@ -38,4 +66,4 @@ jobs:
           - name: Terraform Validate
             run: terraform validate
           - name: Terraform Destroy
-            run: terraform destroy -var="dns_eks_pedido=${{ steps.get_lb.outputs.lb_pedido }}" -var="dns_eks_pagamento=${{ steps.get_lb.outputs.lb_pagamento }}" -var="dns_eks_preparo=${{ steps.get_lb.outputs.lb_preparo }}" -auto-approve
+            run: terraform destroy -var="dns_eks_usuario=${{ steps.get_lb.outputs.lb_usuario }}" -var="dns_eks_video=${{ steps.get_lb.outputs.lb_video }}" -auto-approve

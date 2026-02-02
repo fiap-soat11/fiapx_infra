@@ -3,14 +3,14 @@ data "aws_vpc" "selected" {
 }
 
 resource "aws_db_subnet_group" "this" {
-  name       = "${var.project_name}-rds-subnets"
+  name       = "${var.projectName}-rds-subnets"
   subnet_ids = var.private_subnet_ids
 
-  tags = { Name = "${var.project_name}-rds-subnets" }
+  tags = { Name = "${var.projectName}-rds-subnets" }
 }
 
 resource "aws_security_group" "rds_mysql" {
-  name        = "${var.project_name}-rds-sg"
+  name        = "${var.projectName}-rds-sg"
   description = "MySQL access SG"
   vpc_id      = var.vpc_id
 
@@ -40,7 +40,7 @@ resource "aws_security_group" "rds_mysql" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "${var.project_name}-rds-sg" }
+  tags = { Name = "${var.projectName}-rds-sg" }
 }
 
 //resource "aws_security_group_rule" "allow_app_sg_to_rds" {

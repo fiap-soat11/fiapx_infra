@@ -1,19 +1,9 @@
-variable "id" {
-  type = string
-  
-}
-
-
-variable "dns_eks_pedido" {
-  description = "DNS do LoadBalancer do Service Pedido no EKS"
+variable "dns_eks_usuario" {
+  description = "DNS do LoadBalancer do Service Usuario no EKS"
   type        = string
 }
-variable "dns_eks_pagamento" {
-  description = "DNS do LoadBalancer do Service Pagamento no EKS"
-  type        = string
-}
-variable "dns_eks_preparo" {
-  description = "DNS do LoadBalancer do Service Preparo no EKS"
+variable "dns_eks_video" {
+  description = "DNS do LoadBalancer do Service Video no EKS"
   type        = string
 }
 variable "regionDefault" {

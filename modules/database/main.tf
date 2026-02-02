@@ -4,8 +4,8 @@ resource "random_password" "master" {
 }
 
 resource "aws_secretsmanager_secret" "db_master" {
-  name        = "${var.project_name}-${var.idSecret}/rds-mysql/master"
-  description = "Master credentials for ${var.project_name} RDS MySQL"
+  name        = "${var.projectName}-${var.idSecret}/rds-mysql/master"
+  description = "Master credentials for ${var.projectName} RDS MySQL"
   kms_key_id  = var.kms_key_id
 }
 
@@ -18,7 +18,7 @@ resource "aws_secretsmanager_secret_version" "db_master_val" {
 }
 
 resource "aws_db_instance" "mysql" {
-  identifier     = "${var.project_name}-mysql"
+  identifier     = "${var.projectName}-mysql"
   engine         = "mysql"
   engine_version = var.db_engine_version == null ? null : var.db_engine_version
 
@@ -49,7 +49,7 @@ resource "aws_db_instance" "mysql" {
   parameter_group_name                = aws_db_parameter_group.mysql_params.name
   iam_database_authentication_enabled = var.enable_iam_auth
 
-  tags = { Name = "${var.project_name}-mysql" }
+  tags = { Name = "${var.projectName}-mysql" }
 
   skip_final_snapshot = true
 }

@@ -1,3 +1,30 @@
+
+module "s3_bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+  bucket = "fiapx-video-s3"
+  acl    = "private"
+  control_object_ownership = true
+  object_ownership         = "ObjectWriter"
+  versioning = {
+    enabled = true
+  }
+}
+
+module "sqs" {
+  source  = "terraform-aws-modules/sqs/aws"
+  name = "fiapx-video.fifo"
+  fifo_queue = true
+}
+
+module "database" {
+  source             = "./modules/database"
+  projectName        = var.projectName
+  regionDefault      = var.regionDefault
+  vpc_id             = data.aws_vpc.vpc.id
+  private_subnet_ids = [for subnet in data.aws_subnet.subnet : subnet.id if subnet.availability_zone != "${var.regionDefault}e"]
+}
+
+
 module "eks" {
   source        = "./modules/eks"
   projectName   = var.projectName
@@ -12,20 +39,10 @@ module "eks" {
   aws_subnets   = [for subnet in data.aws_subnet.subnet : subnet.id if subnet.availability_zone != "${var.regionDefault}e"]
 }
 
-//module "api_gateway" {
-//  source        = "./modules/api_gateway"
-//  id            = var.id
-//  uri_lambda    = data.aws_lambda_function.fiap-lambda.arn
-//  function_name = data.aws_lambda_function.fiap-lambda.function_name
-//  regionDefault = var.regionDefault
-//  dns_eks       = var.dns_eks
-//}
-
 module "api_gateway" {
   source            = "./modules/api_gateway"
-  id                = var.id
   regionDefault     = var.regionDefault
-  dns_eks_pedido    = var.dns_eks_pedido
-  dns_eks_pagamento = var.dns_eks_pagamento
-  dns_eks_preparo   = var.dns_eks_preparo
+  dns_eks_usuario   = var.dns_eks_usuario
+  dns_eks_video     = var.dns_eks_video
 }
+

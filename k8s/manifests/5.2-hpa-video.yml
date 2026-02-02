@@ -1,13 +1,13 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: fiap-hpa-pagamento
+  name: fiap-hpa-video
   namespace: fiap-soat11
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: fiap-deployment-pagamento
+    name: fiap-deployment-video
   minReplicas: 2
   maxReplicas: 10
   behavior:
