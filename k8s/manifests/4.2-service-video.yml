@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fiap-svc-pedido
+  name: fiap-svc-video
   namespace: fiap-soat11
 spec:
   selector:
-    app: fiap-deployment-pedido
+    app: fiap-deployment-video
   ports:
     - protocol: TCP
-      port: 8081
+      port: 8082
       targetPort: 8080
   type: LoadBalancer

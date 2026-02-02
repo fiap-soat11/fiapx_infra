@@ -1,6 +1,6 @@
 resource "aws_db_parameter_group" "mysql_params" {
-  name   = "${var.project_name}-mysql-params"
-  family = "mysql8.0"
+  name   = "${var.projectName}-mysql-params"
+  family = "mysql8.4"
 
   parameter {
     apply_method = "pending-reboot"
@@ -14,5 +14,5 @@ resource "aws_db_parameter_group" "mysql_params" {
     value        = "STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
   }
 
-  tags = { Name = "${var.project_name}-mysql-params" }
+  tags = { Name = "${var.projectName}-mysql-params" }
 }

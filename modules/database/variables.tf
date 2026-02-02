@@ -4,27 +4,20 @@ variable "idSecret" {
 
 }
 
-variable "aws_region" {
+variable "regionDefault" {
   type    = string
-  default = "us-east-1"
 }
 
-variable "project_name" {
+variable "projectName" {
   type    = string
-  default = "fiap-mysql"
 }
 
 variable "vpc_id" {
   type    = string
-  default = "vpc-090a0a9ea63030de5"
 }
 
 variable "private_subnet_ids" {
   type = list(string)
-  default = [
-    "subnet-0283c4e2fb68b6403",
-    "subnet-024bfea7401bdbc83",
-  ]
 }
 
 # DB
@@ -65,10 +58,8 @@ variable "kms_key_id" {
 }
 
 variable "app_security_group_ids" {
-  type = list(string)
-  default = [
-    "sg-00903f08050d8519c"
-  ]
+  type    = list(string)
+  default = []
 }
 
 variable "allowed_cidr_blocks" {
