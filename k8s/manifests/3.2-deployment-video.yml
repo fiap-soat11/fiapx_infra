@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: fiap-deployment-video
-          #image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiap-video
-          image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiapx-base-api
+          #image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiapx-video-api
+          image: 902877452717.dkr.ecr.us-east-1.amazonaws.com/fiapx-base-api
           #image: adinaildoribeiro/fiap-pedido:v4
           imagePullPolicy: Always
           ports:

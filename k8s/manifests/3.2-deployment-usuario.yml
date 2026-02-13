@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: fiap-deployment-usuario
-          #image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiap-usuario
-          image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiapx-base-api
+          #image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiapx-usuario-api
+          image: 902877452717.dkr.ecr.us-east-1.amazonaws.com/fiapx-base-api
           #image: adinaildoribeiro/fiap-pedido:v4
           imagePullPolicy: Always
           ports:

@@ -4,6 +4,8 @@ on:
 jobs:
     Infrastructure:
       runs-on: ubuntu-latest
+      outputs:
+        db_host: ${{ steps.get_db_host.outputs.db_host }}
       steps:
           - name: Baixando arquivos do repo
             uses: actions/checkout@v4
@@ -24,6 +26,12 @@ jobs:
             run: terraform validate
           - name: Terraform Apply Database              
             run: terraform apply -target=module.database -auto-approve
+          - name: Get Database Host
+            id: get_db_host
+            run: |
+              DB_HOST=$(terraform output -raw database_endpoint)
+              echo "::set-output name=db_host::$DB_HOST"
+              echo "Database host: $DB_HOST"
           - name: SQS             
             run: terraform apply -target=module.sqs -auto-approve
           - name: Terraform Apply EKS              
@@ -32,7 +40,9 @@ jobs:
       needs: Infrastructure
       outputs:
         lb_video: ${{ steps.get_lb_video.outputs.lb_video }}
+        port_video: ${{ steps.get_lb_video.outputs.port_video }}
         lb_usuario: ${{ steps.get_lb_usuario.outputs.lb_usuario }}
+        port_usuario: ${{ steps.get_lb_usuario.outputs.port_usuario }}
       runs-on: ubuntu-latest
       steps:
         - name: Checkout Repo
@@ -56,7 +66,11 @@ jobs:
           run: |
             aws eks update-kubeconfig \
             --name ${{ vars.CLUSTER_NAME }} \
-            --region ${{ vars.AWS_REGION }}      
+            --region ${{ vars.AWS_REGION }}     
+        - name: Tokenizar Configurações
+          run: |
+            sed -i "s/__AWS_ACCOUNT_ID__/${{ vars.AWS_ACCOUNT_ID }}/g" ./k8s/manifests/*.yml
+            sed -i "s/__DB_HOST__/${{ needs.Infrastructure.outputs.db_host }}/g" ./k8s/manifests/*.yml 
         - name: Aplicar Configurações no EKS
           run: kubectl apply -f ./k8s/manifests
         - name: Aguardar Deployments
@@ -68,9 +82,11 @@ jobs:
           run: |
               for i in {1..10}; do
                 LB=$(kubectl get svc fiap-svc-usuario -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                PORT=$(kubectl get svc fiap-svc-usuario -n fiap-soat11 -o jsonpath='{.spec.ports[0].port}')
                 if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
                   echo "LoadBalancer hostname found: $LB"
                   echo "::set-output name=lb_usuario::$LB"
+                  echo "::set-output name=port_usuario::$PORT"
                   exit 0
                 else
                   echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
@@ -84,9 +100,11 @@ jobs:
           run: |
               for i in {1..10}; do
                 LB=$(kubectl get svc fiap-svc-video -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                PORT=$(kubectl get svc fiap-svc-video -n fiap-soat11 -o jsonpath='{.spec.ports[0].port}')
                 if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
                   echo "LoadBalancer hostname found: $LB"
                   echo "::set-output name=lb_video::$LB"
+                  echo "::set-output name=port_video::$PORT"
                   exit 0
                 else
                   echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
@@ -117,4 +135,4 @@ jobs:
           - name: Terraform Validate
             run: terraform validate
           - name: Terraform Apply
-            run: terraform apply -target=module.api_gateway -var="dns_eks_usuario=${{ needs.K8S_Deploy.outputs.lb_usuario }}" -var="dns_eks_video=${{ needs.K8S_Deploy.outputs.lb_video }}" -auto-approve
+            run: terraform apply -target=module.api_gateway -var="dns_eks_usuario=${{ needs.K8S_Deploy.outputs.lb_usuario }}:${{ needs.K8S_Deploy.outputs.port_usuario }}" -var="dns_eks_video=${{ needs.K8S_Deploy.outputs.lb_video }}:${{ needs.K8S_Deploy.outputs.port_video }}" -auto-approve
