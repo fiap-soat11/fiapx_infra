@@ -1,6 +1,6 @@
 variable "idSecret" {
   type    = string
-  default = "fiap1234567"
+  default = "fiap1234567890"
 
 }
 
