@@ -41,6 +41,8 @@ jobs:
               QUEUE_URL=$(terraform output -raw queue_url)
               echo "::set-output name=queue_url::$QUEUE_URL"
               echo "SQS Queue URL: $QUEUE_URL"
+          - name: S3
+            run: terraform apply -target=module.s3_bucket -auto-approve
           - name: Terraform Apply EKS              
             run: terraform apply -target=module.eks -var="id=${{ vars.AWS_ACCOUNT_ID}}" -auto-approve
     K8S_Deploy:
