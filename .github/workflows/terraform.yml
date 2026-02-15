@@ -30,7 +30,7 @@ jobs:
           - name: Get Database Host
             id: get_db_host
             run: |
-              DB_HOST=$(terraform output -raw database_endpoint)
+              DB_HOST=$(terraform output -raw db_endpoint)
               echo "::set-output name=db_host::$DB_HOST"
               echo "Database host: $DB_HOST"
           - name: SQS             
