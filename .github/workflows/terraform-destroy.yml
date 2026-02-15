@@ -24,7 +24,8 @@ jobs:
             run: |
               aws eks update-kubeconfig \
               --name ${{ vars.CLUSTER_NAME }} \
-              --region ${{ vars.AWS_REGION }}                
+              --region ${{ vars.AWS_REGION }}     
+            continue-on-error: true           
           - name: Get Service LB usuario
             id: get_lb_usuario
             run: |
@@ -67,10 +68,13 @@ jobs:
             run: terraform validate
           - name: Terraform Destroy
             run: terraform destroy -target=module.eks -var="dns_eks_usuario=${{ steps.get_lb_usuario.outputs.lb_usuario }}" -var="dns_eks_video=${{ steps.get_lb_video.outputs.lb_video }}" -auto-approve
+            continue-on-error: true
           - name: Terraform Destroy Database              
             run: terraform destroy -target=module.database -auto-approve
+            continue-on-error: true
           - name: Terraform Destroy S3
             run: terraform destroy -target=module.s3_bucket -auto-approve
+            continue-on-error: true
           - name: Terraform Destroy SQS
             run: terraform destroy -target=module.sqs -auto-approve
-          
+            continue-on-error: true
