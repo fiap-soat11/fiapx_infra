@@ -6,6 +6,7 @@ jobs:
       runs-on: ubuntu-latest
       outputs:
         db_host: ${{ steps.get_db_host.outputs.db_host }}
+        queue_url: ${{ steps.get_queue_url.outputs.queue_url }}
       steps:
           - name: Baixando arquivos do repo
             uses: actions/checkout@v4
@@ -34,6 +35,12 @@ jobs:
               echo "Database host: $DB_HOST"
           - name: SQS             
             run: terraform apply -target=module.sqs -auto-approve
+          - name: Get SQS Queue URL
+            id: get_queue_url
+            run: |
+              QUEUE_URL=$(terraform output -raw queue_url)
+              echo "::set-output name=queue_url::$QUEUE_URL"
+              echo "SQS Queue URL: $QUEUE_URL"
           - name: Terraform Apply EKS              
             run: terraform apply -target=module.eks -var="id=${{ vars.AWS_ACCOUNT_ID}}" -auto-approve
     K8S_Deploy:
@@ -70,7 +77,11 @@ jobs:
         - name: Tokenizar Configurações
           run: |
             sed -i "s/__AWS_ACCOUNT_ID__/${{ vars.AWS_ACCOUNT_ID }}/g" ./k8s/manifests/*.yml
+            sed -i "s/__AWS_REGION__/${{ vars.AWS_REGION }}/g" ./k8s/manifests/*.yml 
+            sed -i "s/__ACCESS_KEY__/${{ secrets.AWS_ACCESS_KEY_ID }}/g" ./k8s/manifests/*.yml
+            sed -i "s/__SECRET_KEY__/${{ secrets.AWS_SECRET_ACCESS_KEY }}/g" ./k8s/manifests/*.yml
             sed -i "s/__DB_HOST__/${{ needs.Infrastructure.outputs.db_host }}/g" ./k8s/manifests/*.yml 
+            sed -i "s/__QUEUE_URL__/${{ needs.Infrastructure.outputs.queue_url }}/g" ./k8s/manifests/*.yml
         - name: Aplicar Configurações no EKS
           run: kubectl apply -f ./k8s/manifests
         - name: Aguardar Deployments
