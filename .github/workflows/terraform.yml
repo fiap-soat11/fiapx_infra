@@ -82,12 +82,12 @@ jobs:
             --region ${{ vars.AWS_REGION }}     
         - name: Tokenizar Configurações
           run: |
-            sed -i "s/__AWS_ACCOUNT_ID__/${{ vars.AWS_ACCOUNT_ID }}/g" ./k8s/manifests/*.yml
-            sed -i "s/__AWS_REGION__/${{ vars.AWS_REGION }}/g" ./k8s/manifests/*.yml 
-            sed -i "s/__ACCESS_KEY__/${{ secrets.AWS_ACCESS_KEY_ID }}/g" ./k8s/manifests/*.yml
-            sed -i "s/__SECRET_KEY__/${{ secrets.AWS_SECRET_ACCESS_KEY }}/g" ./k8s/manifests/*.yml
-            sed -i "s/__DB_HOST__/${{ needs.Infrastructure.outputs.db_host }}/g" ./k8s/manifests/*.yml 
-            sed -i "s/__QUEUE_URL__/${{ needs.Infrastructure.outputs.queue_url }}/g" ./k8s/manifests/*.yml
+            sed -i "s|__AWS_ACCOUNT_ID__|${{ vars.AWS_ACCOUNT_ID }}|g" ./k8s/manifests/*.yml
+            sed -i "s|__AWS_REGION__|${{ vars.AWS_REGION }}|g" ./k8s/manifests/*.yml 
+            sed -i "s|__ACCESS_KEY__|${{ vars.AWS_ACCESS_KEY_ID }}|g" ./k8s/manifests/*.yml
+            sed -i "s|__SECRET_KEY__|${{ secrets.AWS_SECRET_ACCESS_KEY }}|g" ./k8s/manifests/*.yml
+            sed -i "s|__DB_HOST__|${{ needs.Infrastructure.outputs.db_host }}|g" ./k8s/manifests/*.yml 
+            sed -i "s|__QUEUE_URL__|${{ needs.Infrastructure.outputs.queue_url }}|g" ./k8s/manifests/*.yml
         - name: Verificar Configurações
           run: | 
             cat ./k8s/manifests/2-secret-bd.yml
