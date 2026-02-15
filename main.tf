@@ -1,8 +1,8 @@
 
 module "s3_bucket" {
-  source = "terraform-aws-modules/s3-bucket/aws"
-  bucket = "fiapx-video-s3"
-  acl    = "private"
+  source                   = "terraform-aws-modules/s3-bucket/aws"
+  bucket                   = "fiapx-video-s3"
+  acl                      = "private"
   control_object_ownership = true
   object_ownership         = "ObjectWriter"
   versioning = {
@@ -11,8 +11,8 @@ module "s3_bucket" {
 }
 
 module "sqs" {
-  source  = "terraform-aws-modules/sqs/aws"
-  name = "fiapx-video.fifo"
+  source     = "terraform-aws-modules/sqs/aws"
+  name       = "fiapx-video.fifo"
   fifo_queue = true
 }
 
@@ -40,9 +40,9 @@ module "eks" {
 }
 
 module "api_gateway" {
-  source            = "./modules/api_gateway"
-  regionDefault     = var.regionDefault
-  dns_eks_usuario   = var.dns_eks_usuario
-  dns_eks_video     = var.dns_eks_video
+  source          = "./modules/api_gateway"
+  regionDefault   = var.regionDefault
+  dns_eks_usuario = var.dns_eks_usuario
+  dns_eks_video   = var.dns_eks_video
 }
 
