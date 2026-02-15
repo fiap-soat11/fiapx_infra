@@ -82,68 +82,72 @@ jobs:
             sed -i "s/__SECRET_KEY__/${{ secrets.AWS_SECRET_ACCESS_KEY }}/g" ./k8s/manifests/*.yml
             sed -i "s/__DB_HOST__/${{ needs.Infrastructure.outputs.db_host }}/g" ./k8s/manifests/*.yml 
             sed -i "s/__QUEUE_URL__/${{ needs.Infrastructure.outputs.queue_url }}/g" ./k8s/manifests/*.yml
-        - name: Aplicar Configurações no EKS
-          run: kubectl apply -f ./k8s/manifests
-        - name: Aguardar Deployments
-          run: |
-            kubectl rollout status deployment/fiap-deployment-usuario -n fiap-soat11 --timeout=180s
-            kubectl rollout status deployment/fiap-deployment-video -n fiap-soat11 --timeout=180s
-        - name: Get Service LB usuario
-          id: get_lb_usuario
-          run: |
-              for i in {1..10}; do
-                LB=$(kubectl get svc fiap-svc-usuario -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-                PORT=$(kubectl get svc fiap-svc-usuario -n fiap-soat11 -o jsonpath='{.spec.ports[0].port}')
-                if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
-                  echo "LoadBalancer hostname found: $LB"
-                  echo "::set-output name=lb_usuario::$LB"
-                  echo "::set-output name=port_usuario::$PORT"
-                  exit 0
-                else
-                  echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
-                  sleep 30
-                fi
-              done
-              echo "Failed to get LoadBalancer hostname after 10 attempts."
-              exit 1
-        - name: Get Service LB video
-          id: get_lb_video
-          run: |
-              for i in {1..10}; do
-                LB=$(kubectl get svc fiap-svc-video -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-                PORT=$(kubectl get svc fiap-svc-video -n fiap-soat11 -o jsonpath='{.spec.ports[0].port}')
-                if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
-                  echo "LoadBalancer hostname found: $LB"
-                  echo "::set-output name=lb_video::$LB"
-                  echo "::set-output name=port_video::$PORT"
-                  exit 0
-                else
-                  echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
-                  sleep 30
-                fi
-              done
-              echo "Failed to get LoadBalancer hostname after 10 attempts."
-              exit 1
-    Api_Gateway:
-      needs: [Infrastructure, K8S_Deploy]
-      runs-on: ubuntu-latest
-      steps:
-          - name: Baixando arquivos do repo
-            uses: actions/checkout@v4
-          - name: Configurando Terraform
-            uses: hashicorp/setup-terraform@v3
-          - name: Aws Credentials
-            uses: aws-actions/configure-aws-credentials@v4
-            with:
-              aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
-              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-              aws-region: ${{ vars.AWS_REGION }}  
-          - name: Terraform Init
-            run: terraform init
-          - name: Terraform Format
-            run: terraform fmt -check
-          - name: Terraform Validate
-            run: terraform validate
-          - name: Terraform Apply
-            run: terraform apply -target=module.api_gateway -var="dns_eks_usuario=${{ needs.K8S_Deploy.outputs.lb_usuario }}:${{ needs.K8S_Deploy.outputs.port_usuario }}" -var="dns_eks_video=${{ needs.K8S_Deploy.outputs.lb_video }}:${{ needs.K8S_Deploy.outputs.port_video }}" -auto-approve
+        - name: Verificar Configurações
+          run: | 
+            cat ./k8s/manifests/2-secret-bd.yml
+            cat ./k8s/manifests/1.1-configmap.yml
+        #- name: Aplicar Configurações no EKS
+        #  run: kubectl apply -f ./k8s/manifests
+        #- name: Aguardar Deployments
+        #  run: |
+        #    kubectl rollout status deployment/fiap-deployment-usuario -n fiap-soat11 --timeout=180s
+        #    kubectl rollout status deployment/fiap-deployment-video -n fiap-soat11 --timeout=180s
+        #- name: Get Service LB usuario
+        #  id: get_lb_usuario
+        #  run: |
+        #      for i in {1..10}; do
+        #        LB=$(kubectl get svc fiap-svc-usuario -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        #        PORT=$(kubectl get svc fiap-svc-usuario -n fiap-soat11 -o jsonpath='{.spec.ports[0].port}')
+        #        if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
+        #          echo "LoadBalancer hostname found: $LB"
+        #          echo "::set-output name=lb_usuario::$LB"
+        #          echo "::set-output name=port_usuario::$PORT"
+        #          exit 0
+        #        else
+        #          echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
+        #          sleep 30
+        #        fi
+        #      done
+        #      echo "Failed to get LoadBalancer hostname after 10 attempts."
+        #      exit 1
+        #- name: Get Service LB video
+        #  id: get_lb_video
+        #  run: |
+        #      for i in {1..10}; do
+        #        LB=$(kubectl get svc fiap-svc-video -n fiap-soat11 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        #        PORT=$(kubectl get svc fiap-svc-video -n fiap-soat11 -o jsonpath='{.spec.ports[0].port}')
+        #        if [ -n "$LB" ] && [ "$LB" != "<none>" ]; then
+        #          echo "LoadBalancer hostname found: $LB"
+        #          echo "::set-output name=lb_video::$LB"
+        #          echo "::set-output name=port_video::$PORT"
+        #          exit 0
+        #        else
+        #          echo "Attempt $i: LoadBalancer hostname not available yet. Retrying in 30 seconds..."
+        #          sleep 30
+        #        fi
+        #      done
+        #      echo "Failed to get LoadBalancer hostname after 10 attempts."
+        #      exit 1
+    #Api_Gateway:
+    #  needs: [Infrastructure, K8S_Deploy]
+    #  runs-on: ubuntu-latest
+    #  steps:
+    #      - name: Baixando arquivos do repo
+    #        uses: actions/checkout@v4
+    #      - name: Configurando Terraform
+    #        uses: hashicorp/setup-terraform@v3
+    #      - name: Aws Credentials
+    #        uses: aws-actions/configure-aws-credentials@v4
+    #        with:
+    #          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+    #          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+    #          aws-region: ${{ vars.AWS_REGION }}  
+    #      - name: Terraform Init
+    #        run: terraform init
+    #      - name: Terraform Format
+    #        run: terraform fmt -check
+    #      - name: Terraform Validate
+    #        run: terraform validate
+    #      - name: Terraform Apply
+    #        run: terraform apply -target=module.api_gateway -var="dns_eks_usuario=${{ needs.K8S_Deploy.outputs.lb_usuario }}:${{ needs.K8S_Deploy.outputs.port_usuario }}" -var="dns_eks_video=${{ needs.K8S_Deploy.outputs.lb_video }}:${{ needs.K8S_Deploy.outputs.port_video }}" -auto-approve
