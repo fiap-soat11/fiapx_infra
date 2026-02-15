@@ -2,7 +2,7 @@ name: Destruir Infraestrutura AWS
 on:
     workflow_dispatch:
 jobs:
-    terraform:
+    destroy:
         runs-on: ubuntu-latest
         steps:
           - name: Baixando arquivos do repo
@@ -66,4 +66,11 @@ jobs:
           - name: Terraform Validate
             run: terraform validate
           - name: Terraform Destroy
-            run: terraform destroy -var="dns_eks_usuario=${{ steps.get_lb.outputs.lb_usuario }}" -var="dns_eks_video=${{ steps.get_lb.outputs.lb_video }}" -auto-approve
+            run: terraform destroy -target=module.eks -var="dns_eks_usuario=${{ steps.get_lb_usuario.outputs.lb_usuario }}" -var="dns_eks_video=${{ steps.get_lb_video.outputs.lb_video }}" -auto-approve
+          - name: Terraform Destroy Database              
+            run: terraform destroy -target=module.database -auto-approve
+          - name: Terraform Destroy S3
+            run: terraform destroy -target=module.s3_bucket -auto-approve
+          - name: Terraform Destroy SQS
+            run: terraform destroy -target=module.sqs -auto-approve
+          
