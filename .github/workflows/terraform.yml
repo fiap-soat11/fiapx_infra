@@ -10,6 +10,9 @@ jobs:
       steps:
           - name: Baixando arquivos do repo
             uses: actions/checkout@v4
+          - name: Tokenizar Configurações
+            run: |
+              sed -i "s|__AWS_ACCOUNT_ID__|${{ vars.AWS_ACCOUNT_ID }}|g" ./*.tf
           - name: Permissao arquivo
             run: |
               chmod +x ./modules/database/init/run_sql.sh
@@ -82,6 +85,7 @@ jobs:
             --region ${{ vars.AWS_REGION }}     
         - name: Tokenizar Configurações
           run: |
+            sed -i "s|__AWS_ACCOUNT_ID__|${{ vars.AWS_ACCOUNT_ID }}|g" ./*.tf
             sed -i "s|__AWS_ACCOUNT_ID__|${{ vars.AWS_ACCOUNT_ID }}|g" ./k8s/manifests/*.yml
             sed -i "s|__AWS_REGION__|${{ vars.AWS_REGION }}|g" ./k8s/manifests/*.yml 
             sed -i "s|__ACCESS_KEY__|${{ vars.AWS_ACCESS_KEY_ID }}|g" ./k8s/manifests/*.yml

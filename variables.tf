@@ -1,6 +1,6 @@
 
 variable "id" {
-  default = "902877452717"
+  default = "__AWS_ACCOUNT_ID__"
 }
 variable "regionDefault" {
   default = "us-east-1"
