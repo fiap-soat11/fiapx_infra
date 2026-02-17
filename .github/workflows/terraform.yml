@@ -10,9 +10,14 @@ jobs:
       steps:
           - name: Baixando arquivos do repo
             uses: actions/checkout@v4
-          - name: Tokenizar Configurações
-            run: |
-              sed -i "s|__AWS_ACCOUNT_ID__|${{ vars.AWS_ACCOUNT_ID }}|g" ./*.tf
+          - name: Tokenizar artefatos
+            uses: cschleiden/replace-tokens@v1
+            with:
+              tokenPrefix: '__'
+              tokenSuffix: '__'
+              files: './*.tf'    
+            env:
+              AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
           - name: Permissao arquivo
             run: |
               chmod +x ./modules/database/init/run_sql.sh
@@ -71,6 +76,11 @@ jobs:
             files: './k8s/manifests/*.yml'    
           env:
             AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
+            ACCESS_KEY: ${{ vars.AWS_ACCESS_KEY_ID }}
+            SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            DB_HOST: ${{ needs.Infrastructure.outputs.db_host }}
+            QUEUE_URL: ${{ needs.Infrastructure.outputs.queue_url }}
         - name: Configure AWS Credentials
           uses: aws-actions/configure-aws-credentials@v4
           with:
@@ -82,16 +92,7 @@ jobs:
           run: |
             aws eks update-kubeconfig \
             --name ${{ vars.CLUSTER_NAME }} \
-            --region ${{ vars.AWS_REGION }}     
-        - name: Tokenizar Configurações
-          run: |
-            sed -i "s|__AWS_ACCOUNT_ID__|${{ vars.AWS_ACCOUNT_ID }}|g" ./*.tf
-            sed -i "s|__AWS_ACCOUNT_ID__|${{ vars.AWS_ACCOUNT_ID }}|g" ./k8s/manifests/*.yml
-            sed -i "s|__AWS_REGION__|${{ vars.AWS_REGION }}|g" ./k8s/manifests/*.yml 
-            sed -i "s|__ACCESS_KEY__|${{ vars.AWS_ACCESS_KEY_ID }}|g" ./k8s/manifests/*.yml
-            sed -i "s|__SECRET_KEY__|${{ secrets.AWS_SECRET_ACCESS_KEY }}|g" ./k8s/manifests/*.yml
-            sed -i "s|__DB_HOST__|${{ needs.Infrastructure.outputs.db_host }}|g" ./k8s/manifests/*.yml 
-            sed -i "s|__QUEUE_URL__|${{ needs.Infrastructure.outputs.queue_url }}|g" ./k8s/manifests/*.yml
+            --region ${{ vars.AWS_REGION }}
         - name: Verificar Configurações
           run: | 
             cat ./k8s/manifests/2-secret-bd.yml
