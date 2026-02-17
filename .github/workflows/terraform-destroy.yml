@@ -7,6 +7,14 @@ jobs:
         steps:
           - name: Baixando arquivos do repo
             uses: actions/checkout@v4
+          - name: Tokenizar artefatos
+            uses: cschleiden/replace-tokens@v1
+            with:
+              tokenPrefix: '__'
+              tokenSuffix: '__'
+              files: './*.tf'    
+            env:
+              AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
           - name: Aws Credentials
             uses: aws-actions/configure-aws-credentials@v4
             with:
