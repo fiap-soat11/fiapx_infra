@@ -73,8 +73,8 @@ jobs:
         - name: Tokenizar artefatos
           uses: cschleiden/replace-tokens@v1
           with:
-            tokenPrefix: '__'
-            tokenSuffix: '__'
+            tokenPrefix: '___'
+            tokenSuffix: '___'
             files: './k8s/manifests/*.yml'    
           env:
             AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
