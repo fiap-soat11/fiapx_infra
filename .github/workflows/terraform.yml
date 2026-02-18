@@ -2,65 +2,65 @@ name: Construir Infraestrutura AWS
 on:
     workflow_dispatch:
 jobs:
-    #Infrastructure:
-    #  runs-on: ubuntu-latest
-    #  outputs:
-    #    db_host: ${{ steps.get_db_host.outputs.db_host }}
-    #    queue_url: ${{ steps.get_queue_url.outputs.queue_url }}
-    #  steps:
-    #      - name: Baixando arquivos do repo
-    #        uses: actions/checkout@v4
-    #      - name: Tokenizar artefatos
-    #        uses: cschleiden/replace-tokens@v1
-    #        with:
-    #          tokenPrefix: '__'
-    #          tokenSuffix: '__'
-    #          files: './*.tf'    
-    #        env:
-    #          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
-    #      - name: Permissao arquivo
-    #        run: |
-    #          chmod +x ./modules/database/init/run_sql.sh
-    #          chmod +x ./modules/database/init/sql/1_inicializacao.sql
-    #      - name: Aws Credentials
-    #        uses: aws-actions/configure-aws-credentials@v4
-    #        with:
-    #          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
-    #          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-    #          aws-region: ${{ vars.AWS_REGION }}  
-    #      - name: Configurando Terraform
-    #        uses: hashicorp/setup-terraform@v3
-    #      - name: Terraform Init
-    #        run: terraform init -input=false
-    #      - name: Terraform Format
-    #        run: terraform fmt -check
-    #      - name: Terraform Validate
-    #        run: terraform validate
-    #      - name: Terraform Apply Database              
-    #        run: | 
-    #          valor=$((RANDOM % 90000000 + 10000000))
-    #          terraform apply -target=module.database -var="idSecret=$valor" -auto-approve
-    #      - name: Get Database Host
-    #        id: get_db_host
-    #        run: |
-    #          DB_HOST=$(terraform output -raw db_endpoint)
-    #          echo "::set-output name=db_host::$DB_HOST"
-    #          echo "Database host: $DB_HOST"
-    #      - name: SQS             
-    #        run: terraform apply -target=module.sqs -auto-approve
-    #      - name: Get SQS Queue URL
-    #        id: get_queue_url
-    #        run: |
-    #          QUEUE_URL=$(terraform output -raw queue_url)
-    #          echo "::set-output name=queue_url::$QUEUE_URL"
-    #          echo "SQS Queue URL: $QUEUE_URL"
-    #      - name: S3
-    #        run: terraform apply -target=module.s3_bucket -auto-approve
-    #      - name: Terraform Apply EKS              
-    #        run: terraform apply -target=module.eks -var="id=${{ vars.AWS_ACCOUNT_ID}}" -auto-approve
+    Infrastructure:
+      runs-on: ubuntu-latest
+      outputs:
+        db_host: ${{ steps.get_db_host.outputs.db_host }}
+        queue_url: ${{ steps.get_queue_url.outputs.queue_url }}
+      steps:
+          - name: Baixando arquivos do repo
+            uses: actions/checkout@v4
+          - name: Tokenizar artefatos
+            uses: cschleiden/replace-tokens@v1
+            with:
+              tokenPrefix: '__'
+              tokenSuffix: '__'
+              files: './*.tf'    
+            env:
+              AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+          - name: Permissao arquivo
+            run: |
+              chmod +x ./modules/database/init/run_sql.sh
+              chmod +x ./modules/database/init/sql/1_inicializacao.sql
+          - name: Aws Credentials
+            uses: aws-actions/configure-aws-credentials@v4
+            with:
+              aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+              aws-region: ${{ vars.AWS_REGION }}  
+          - name: Configurando Terraform
+            uses: hashicorp/setup-terraform@v3
+          - name: Terraform Init
+            run: terraform init -input=false
+          - name: Terraform Format
+            run: terraform fmt -check
+          - name: Terraform Validate
+            run: terraform validate
+          - name: Terraform Apply Database              
+            run: | 
+              valor=$((RANDOM % 90000000 + 10000000))
+              terraform apply -target=module.database -var="idSecret=$valor" -auto-approve
+          - name: Get Database Host
+            id: get_db_host
+            run: |
+              DB_HOST=$(terraform output -raw db_endpoint)
+              echo "::set-output name=db_host::${DB_HOST%%:*}"
+              echo "Database host: $DB_HOST"
+          - name: SQS             
+            run: terraform apply -target=module.sqs -auto-approve
+          - name: Get SQS Queue URL
+            id: get_queue_url
+            run: |
+              QUEUE_URL=$(terraform output -raw queue_url)
+              echo "::set-output name=queue_url::$QUEUE_URL"
+              echo "SQS Queue URL: $QUEUE_URL"
+          - name: S3
+            run: terraform apply -target=module.s3_bucket -auto-approve
+          - name: Terraform Apply EKS              
+            run: terraform apply -target=module.eks -var="id=${{ vars.AWS_ACCOUNT_ID}}" -auto-approve
     K8S_Deploy:
-      #needs: Infrastructure
+      needs: Infrastructure
       #outputs:
       #  lb_video: ${{ steps.get_lb_video.outputs.lb_video }}
       #  port_video: ${{ steps.get_lb_video.outputs.port_video }}
@@ -81,10 +81,8 @@ jobs:
             AWS_REGION: ${{ vars.AWS_REGION }}
             ACCESS_KEY: ${{ vars.AWS_ACCESS_KEY_ID }}
             SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            #DB_HOST: ${{ needs.Infrastructure.outputs.db_host }}
-            DB_HOST: 'fiapx-mysql.cqtsgfcxq43l.us-east-1.rds.amazonaws.com:3306'
-            #QUEUE_URL: ${{ needs.Infrastructure.outputs.queue_url }}
-            QUEUE_URL: 'https://sqs.us-east-1.amazonaws.com/902877452717/fiapx-video.fifo'
+            DB_HOST: ${{ needs.Infrastructure.outputs.db_host }}
+            QUEUE_URL: ${{ needs.Infrastructure.outputs.queue_url }}
         - name: Configure AWS Credentials
           uses: aws-actions/configure-aws-credentials@v4
           with:
