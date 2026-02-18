@@ -17,6 +17,7 @@ module "sqs" {
 }
 
 module "database" {
+  idSecret           = var.idSecret
   source             = "./modules/database"
   projectName        = var.projectName
   regionDefault      = var.regionDefault

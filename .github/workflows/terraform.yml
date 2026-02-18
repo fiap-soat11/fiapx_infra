@@ -38,7 +38,9 @@ jobs:
           - name: Terraform Validate
             run: terraform validate
           - name: Terraform Apply Database              
-            run: terraform apply -target=module.database -auto-approve
+            run: | 
+              valor=$((RANDOM % 90000000 + 10000000))
+              terraform apply -target=module.database -var="idSecret=$valor" -auto-approve
           - name: Get Database Host
             id: get_db_host
             run: |
