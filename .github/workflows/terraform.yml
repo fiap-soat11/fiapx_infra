@@ -147,6 +147,14 @@ jobs:
       steps:
           - name: Baixando arquivos do repo
             uses: actions/checkout@v4
+          - name: Tokenizar artefatos
+            uses: cschleiden/replace-tokens@v1
+            with:
+              tokenPrefix: '___'
+              tokenSuffix: '___'
+              files: './*.tf'    
+            env:
+              AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
           - name: Configurando Terraform
             uses: hashicorp/setup-terraform@v3
           - name: Aws Credentials
