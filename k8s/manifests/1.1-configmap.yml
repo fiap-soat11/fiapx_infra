@@ -7,3 +7,13 @@ data:
   ASPNETCORE_ENVIRONMENT: "Production"
   Logging__LogLevel__Default: "Information"
   Logging__LogLevel__Microsoft: "Warning"
+  AWS__S3__Region: "___AWS_REGION___"
+  AWS__S3__BucketName: "fiapx-video-s3"
+  AWS__S3__AccessKey: "___ACCESS_KEY___"
+  AWS__S3__SecretKey: "___SECRET_KEY___"
+  AWS__SQS__QueueUrl: "___QUEUE_URL___"
+  AWS__SQS__Region: "___AWS_REGION___"
+  AWS__SQS__AccessKey: "___ACCESS_KEY___"
+  AWS__SQS__SecretKey: "___SECRET_KEY___"
+
+  

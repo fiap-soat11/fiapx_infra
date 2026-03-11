@@ -15,8 +15,9 @@ spec:
     spec:
       containers:
         - name: fiap-deployment-usuario
-          #image: __AWS_ACCOUNT_ID__.dkr.ecr.us-east-1.amazonaws.com/fiap-usuario
-          image: adinaildoribeiro/fiap-pedido:v4
+          image: ___AWS_ACCOUNT_ID___.dkr.ecr.us-east-1.amazonaws.com/fiapx-usuario-api
+          #image: 902877452717.dkr.ecr.us-east-1.amazonaws.com/fiapx-base-api
+          #image: adinaildoribeiro/fiap-pedido:v4
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -27,12 +28,11 @@ spec:
             limits:
               cpu: "250m"
               memory: "256Mi"
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                secretKeyRef:
-                  name: fiap-db-secret
-                  key: ConnectionStrings__DefaultConnection
+          envFrom:
+            - configMapRef:
+                name: fiap-configmap 
+            - secretRef:
+                name: fiap-db-secret
           livenessProbe:
             httpGet:
               path: /api/Health

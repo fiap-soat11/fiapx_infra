@@ -2,11 +2,19 @@ name: Destruir Infraestrutura AWS
 on:
     workflow_dispatch:
 jobs:
-    terraform:
+    destroy:
         runs-on: ubuntu-latest
         steps:
           - name: Baixando arquivos do repo
             uses: actions/checkout@v4
+          - name: Tokenizar artefatos
+            uses: cschleiden/replace-tokens@v1
+            with:
+              tokenPrefix: '___'
+              tokenSuffix: '___'
+              files: './*.tf'    
+            env:
+              AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
           - name: Aws Credentials
             uses: aws-actions/configure-aws-credentials@v4
             with:
@@ -24,7 +32,8 @@ jobs:
             run: |
               aws eks update-kubeconfig \
               --name ${{ vars.CLUSTER_NAME }} \
-              --region ${{ vars.AWS_REGION }}                
+              --region ${{ vars.AWS_REGION }}     
+            continue-on-error: true           
           - name: Get Service LB usuario
             id: get_lb_usuario
             run: |
@@ -66,4 +75,14 @@ jobs:
           - name: Terraform Validate
             run: terraform validate
           - name: Terraform Destroy
-            run: terraform destroy -var="dns_eks_usuario=${{ steps.get_lb.outputs.lb_usuario }}" -var="dns_eks_video=${{ steps.get_lb.outputs.lb_video }}" -auto-approve
+            run: terraform destroy -target=module.eks -var="dns_eks_usuario=${{ steps.get_lb_usuario.outputs.lb_usuario }}" -var="dns_eks_video=${{ steps.get_lb_video.outputs.lb_video }}" -auto-approve
+            continue-on-error: true
+          - name: Terraform Destroy Database              
+            run: terraform destroy -target=module.database -auto-approve
+            continue-on-error: true
+          - name: Terraform Destroy S3
+            run: terraform destroy -target=module.s3_bucket -auto-approve
+            continue-on-error: true
+          - name: Terraform Destroy SQS
+            run: terraform destroy -target=module.sqs -auto-approve
+            continue-on-error: true

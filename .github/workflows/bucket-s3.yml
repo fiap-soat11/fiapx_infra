@@ -15,4 +15,4 @@ jobs:
 
           - name: Create S3 bucket
             run: |
-              aws s3api create-bucket --bucket "s3-fiap-soat11-902877452717" --region ${{ vars.AWS_REGION }}
+              aws s3api create-bucket --bucket "s3-fiap-soat11-${{ vars.AWS_ACCOUNT_ID }}" --region ${{ vars.AWS_REGION }}

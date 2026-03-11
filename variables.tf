@@ -1,6 +1,6 @@
 
 variable "id" {
-  default = "902877452717"
+  default = "___AWS_ACCOUNT_ID___"
 }
 variable "regionDefault" {
   default = "us-east-1"
@@ -36,4 +36,9 @@ variable "dns_eks_usuario" {
 variable "dns_eks_video" {
   type    = string
   default = "value"
+}
+
+variable "idSecret" {
+  type    = string
+  default = "fiap1234567890123"
 }
