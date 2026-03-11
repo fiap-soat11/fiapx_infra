@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: fiap-deployment-processamento
-          #image: ___AWS_ACCOUNT_ID___.dkr.ecr.us-east-1.amazonaws.com/fiap-processamento-api
-          image: ___AWS_ACCOUNT_ID___.dkr.ecr.us-east-1.amazonaws.com/fiapx-base-api
+          image: ___AWS_ACCOUNT_ID___.dkr.ecr.us-east-1.amazonaws.com/fiap-processamento-api
+          #image: ___AWS_ACCOUNT_ID___.dkr.ecr.us-east-1.amazonaws.com/fiapx-base-api
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
