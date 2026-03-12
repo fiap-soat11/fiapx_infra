@@ -83,6 +83,7 @@ jobs:
             SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             DB_HOST: ${{ needs.Infrastructure.outputs.db_host }}
             QUEUE_URL: ${{ needs.Infrastructure.outputs.queue_url }}
+            SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         - name: Configure AWS Credentials
           uses: aws-actions/configure-aws-credentials@v4
           with:

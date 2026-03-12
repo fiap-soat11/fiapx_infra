@@ -15,5 +15,7 @@ data:
   AWS__SQS__Region: "___AWS_REGION___"
   AWS__SQS__AccessKey: "___ACCESS_KEY___"
   AWS__SQS__SecretKey: "___SECRET_KEY___"
+  AWS__SQS__Session_Token: "___SESSION_TOKEN___"
+  AWS__S3__Session_Token: "___SESSION_TOKEN___"
 
   
